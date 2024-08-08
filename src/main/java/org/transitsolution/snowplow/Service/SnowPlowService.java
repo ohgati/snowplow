@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -24,7 +25,7 @@ public class SnowPlowService {
 
     static String appKey = "&key=b0000001";
 
-    public String tracking(String stDate, String edDate) throws IOException, ParseException {
+    public String tracking(String stDate, String edDate, Model model) throws IOException, ParseException {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
         Date now = new Date();
 
@@ -41,46 +42,23 @@ public class SnowPlowService {
         BufferedReader br = new BufferedReader(new InputStreamReader(url.openStream(), "UTF-8"));
         StringBuilder result = new StringBuilder();
         String line;
-
         while ((line = br.readLine()) != null) {
             result.append(line);
         }
+        br.close();
+
+        // Use org.json to parse JSON
+        JSONObject obj = new JSONObject(result.toString());
+        JSONObject obj2 = obj.getJSONObject("MsgHeader");
+        JSONObject obj3 = obj2.getJSONObject("resultMessage");
+        JSONArray arr = obj3.getJSONArray("BusList");
+
+        model.addAttribute("stDate", stDate);
+        model.addAttribute("edDate", edDate);
+        model.addAttribute("list", arr);
 
         br.close();
         return result.toString();
     }
 }
 
-//    @ResponseBody
-//    @RequestMapping(
-//            value = {"/tracking/getBusGpsList.do"},
-//            method = {RequestMethod.GET},
-//            produces = {"application/json;charset=utf-8"}
-//    )
-//    public JSONArray getBusGpsList(Model model, HttpServletRequest request) throws UnsupportedEncodingException, IOException, ParseException {
-//        String busId = request.getParameter("busId");
-//        String stDate = request.getParameter("stDate");
-//        String term = "5";
-//        String stTime = "";
-//        String edTime = "";
-//        if (stDate == null) {
-//            SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
-//            Date now = new Date();
-//            stDate = sdf.format(now);
-//        }
-//
-//        String testUri = "http://api.busrang.com/spc_getBusGpsList?stDate=" + stDate + "&busId=" + busId + "&stTime=" + stTime + "&edTime=" + edTime + "&term=" + term;
-//        return this.getData(testUri);
-//    }
-//
-//    public JSONArray getData(String uri) throws UnsupportedEncodingException, IOException, ParseException {
-//        URL url = new URL(uri + appKey);
-//        BufferedReader br = new BufferedReader(new InputStreamReader(url.openStream(), "UTF-8"));
-//        String result = br.readLine();
-//        JSONParser parser = new JSONParser();
-//        JSONObject obj = (JSONObject)parser.parse(result);
-//        JSONObject obj2 = (JSONObject)obj.get("MsgHeader");
-//        JSONObject obj3 = (JSONObject)obj2.get("resultMessage");
-//        JSONArray arr = (JSONArray)obj3.get("BusList");
-//        return arr;
-//    }

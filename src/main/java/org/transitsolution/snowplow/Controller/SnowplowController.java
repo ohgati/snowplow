@@ -28,6 +28,7 @@ import org.transitsolution.snowplow.Service.SnowPlowService;
 @Controller
 public class SnowplowController {
 
+    @Autowired
     private SnowPlowService service;
 
     @GetMapping("/")
@@ -35,13 +36,13 @@ public class SnowplowController {
         return "index";
     }
 
+    @ResponseBody
     @PostMapping(value = "/searchSnowPlow")
-    public Map<String, Object> searchSnowPlow(@RequestParam String stDate, @RequestParam String edDate) {
+    public Map<String, Object> searchSnowPlow(@RequestParam String stDate, @RequestParam String edDate, Model model) {
         Map<String, Object> result = new HashMap<>();
         try {
-            String response = service.tracking(stDate, edDate);
             // Parse the response if needed and put data into the result map
-            result.put("data", response);
+            result.put("data", service.tracking(stDate, edDate, model));
         } catch (Exception e) {
             result.put("error", e.getMessage());
         }
