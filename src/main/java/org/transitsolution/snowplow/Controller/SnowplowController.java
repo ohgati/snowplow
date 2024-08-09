@@ -6,21 +6,17 @@ import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.time.LocalDateTime;
-import java.util.Date;
+
 import java.util.HashMap;
 import java.util.Map;
 
 import jakarta.servlet.http.HttpServletRequest;
 import org.apache.tomcat.util.json.JSONParser;
-import org.json.JSONArray;
-import org.json.JSONObject;
+import org.json.simple.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.transitsolution.snowplow.Service.SnowPlowService;
 
@@ -29,7 +25,7 @@ import org.transitsolution.snowplow.Service.SnowPlowService;
 public class SnowplowController {
 
     @Autowired
-    private SnowPlowService service;
+    private SnowPlowService snowPlowService;
 
     @GetMapping("/")
     public String main() {
@@ -38,14 +34,22 @@ public class SnowplowController {
 
     @ResponseBody
     @PostMapping(value = "/searchSnowPlow")
-    public Map<String, Object> searchSnowPlow(@RequestParam String stDate, @RequestParam String edDate, Model model) {
+    public Map<String, Object> searchSnowPlow(@RequestParam("stDate") String stDate, @RequestParam("edDate") String edDate) {
         Map<String, Object> result = new HashMap<>();
         try {
             // Parse the response if needed and put data into the result map
-            result.put("data", service.tracking(stDate, edDate, model));
+            result.put("data", snowPlowService.getBusList(stDate, edDate));
         } catch (Exception e) {
             result.put("error", e.getMessage());
         }
+        return result;
+    }
+
+    @ResponseBody
+    @PostMapping(value = "/searchRoute")
+    public Map<String, Object> getBusRoute(@RequestParam("stDate") String stDate, @RequestParam("busId") String busId) throws IOException, ParseException, org.json.simple.parser.ParseException {
+        Map<String, Object> result = new HashMap<>();
+        result.put("data", snowPlowService.getBusGpsList(stDate, busId));
         return result;
     }
 }

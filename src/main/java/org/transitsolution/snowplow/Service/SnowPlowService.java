@@ -1,10 +1,11 @@
 package org.transitsolution.snowplow.Service;
 
 import jakarta.servlet.http.HttpServletRequest;
-import org.apache.tomcat.util.json.JSONParser;
-import org.json.JSONArray;
-import org.json.JSONObject;
+import org.json.simple.*;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 import org.springframework.stereotype.Service;
+
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -16,7 +17,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.net.URL;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -25,7 +25,7 @@ public class SnowPlowService {
 
     static String appKey = "&key=b0000001";
 
-    public String tracking(String stDate, String edDate, Model model) throws IOException, ParseException {
+    public JSONArray getBusList(String stDate, String edDate) throws IOException, ParseException {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
         Date now = new Date();
 
@@ -37,28 +37,38 @@ public class SnowPlowService {
             edDate = sdf.format(now);
         }
 
-        String testUri = "http://api.busrang.com/spc_getListBusDay?stDate=" + stDate;
-        URL url = new URL(testUri + appKey);
+        String testUrl = "http://api.busrang.com/spc_getListBusDay?stDate=" + stDate + "&edDate=" + edDate + appKey;
+        URL url = new URL(testUrl);
         BufferedReader br = new BufferedReader(new InputStreamReader(url.openStream(), "UTF-8"));
-        StringBuilder result = new StringBuilder();
-        String line;
-        while ((line = br.readLine()) != null) {
-            result.append(line);
+
+        String result = br.readLine();
+        JSONParser parser = new JSONParser();
+        JSONObject obj = (JSONObject)parser.parse(result);
+        JSONObject obj2 = (JSONObject)obj.get("MsgHeader");
+        JSONObject obj3 = (JSONObject)obj2.get("resultMessage");
+        JSONArray List = (JSONArray)obj3.get("BusList");
+
+        return List;
+    }
+
+    public JSONArray getBusGpsList(String stDate, String busId) throws UnsupportedEncodingException, IOException, ParseException {
+        if (stDate == null) {
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
+            Date now = new Date();
+            stDate = sdf.format(now);
         }
-        br.close();
+        String term = "5";
 
-        // Use org.json to parse JSON
-        JSONObject obj = new JSONObject(result.toString());
-        JSONObject obj2 = obj.getJSONObject("MsgHeader");
-        JSONObject obj3 = obj2.getJSONObject("resultMessage");
-        JSONArray arr = obj3.getJSONArray("BusList");
-
-        model.addAttribute("stDate", stDate);
-        model.addAttribute("edDate", edDate);
-        model.addAttribute("list", arr);
-
-        br.close();
-        return result.toString();
+        String testUrl = "http://api.busrang.com/spc_getBusGpsList?stDate=" + stDate + "&busId=" + busId +"&term=" + term + appKey;
+        URL url = new URL(testUrl);
+        BufferedReader br = new BufferedReader(new InputStreamReader(url.openStream(), "UTF-8"));
+        String result = br.readLine();
+        JSONParser parser = new JSONParser();
+        JSONObject obj = (JSONObject)parser.parse(result);
+        JSONObject obj2 = (JSONObject)obj.get("MsgHeader");
+        JSONObject obj3 = (JSONObject)obj2.get("resultMessage");
+        JSONArray List = (JSONArray)obj3.get("BusList");
+        return List;
     }
 }
 
