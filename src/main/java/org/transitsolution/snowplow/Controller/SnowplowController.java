@@ -36,6 +36,7 @@ public class SnowplowController {
     @PostMapping(value = "/searchSnowPlow")
     public Map<String, Object> searchSnowPlow(@RequestParam("stDate") String stDate, @RequestParam("edDate") String edDate) {
         Map<String, Object> result = new HashMap<>();
+
         try {
             // Parse the response if needed and put data into the result map
             result.put("data", snowPlowService.getBusList(stDate, edDate));

@@ -33,6 +33,7 @@ function setTerm(index, obj) {
 let linePath= [];
 let polyLine = [];
 let bounds;
+let timeline = []
 
 function searchSnowplow() {
     let stDate = $('#stDate').val();
@@ -50,16 +51,22 @@ function searchSnowplow() {
 
 
             $('#search-result ul').remove()
-            let buslist = response.data
+            let busInfo = response.data.BusInfo
+            let busTime = response.data.BusTime
             let html = '<ul>'
 
-            for (let i = 0; i < buslist.length; i++) {
-                let busTime = buslist[i].COLL_TIME_ED-buslist[i].COLL_TIME_ST
-                let time_hhmmss = convertSecondsToHHMMSS(busTime);
-                html += '<li class="busList" onclick="getBusRoute(this, '+buslist[i].B_ID+', '+buslist[i].C_DATE+')">'
-                html += '<p class="list-item"><span class="list-title">차량 번호 : </span>'+buslist[i].B_ID+'</span>'
+            for (let i = 0; i < busTime.length; i++) {
+                let busRunTime = busTime[i].COLL_TIME_ED-busTime[i].COLL_TIME_ST
+                let time_hhmmss = convertSecondsToHHMMSS(busRunTime);
+                html += '<li class="busList" onclick="getBusRoute(this, '+ busTime[i].B_ID+', '+ busTime[i].C_DATE+')">'
+                html += '<p class="list-item"><span class="list-title">차량 번호 : </span>'+busTime[i].B_ID+'</span>'
                 html += '<p class="list-item"><span class="list-title">운행 시간 : </span>'+time_hhmmss+'</p>'
-                html += '<p class="list-item"><span class="list-title">운행 날짜 : </span>'+buslist[i].C_DATE+'</p>'
+                html += '<p class="list-item"><span class="list-title">운행 날짜 : </span>'+busTime[i].C_DATE+'</p>'
+                if (busInfo[i].TYPE === 'E1') {
+                    html += '<p class="list-item"><span class="list-title">운행 상태 : </span> 운행 중</p>'
+                } else {
+                    html += '<p class="list-item"><span class="list-title">운행 상태 : </span> 운행 종료</p>'
+                }
                 html += '</li>'
             }
 
@@ -107,8 +114,12 @@ function getBusRoute(obj, busId, stDate) {
                 let lat = response.data[i].LATITUDE
                 let lon = response.data[i].LONGITUDE
 
+                timeline.push(response.data[i].COLL_TIME)
                 linePath.push([lat, lon]);
             }
+
+            L.marker(linePath[0]).addTo(map)
+            L.marker(linePath[linePath.length-1]).addTo(map)
             drawRoute()
         },
         error: function (error) {
@@ -156,3 +167,4 @@ function mapBounds() {
     bounds = L.latLngBounds(linePath);
     map.fitBounds(linePath);
 }
+
